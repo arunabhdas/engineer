@@ -1,0 +1,191 @@
+Given the requirements, we will need to create an Android app using Kotlin and Jetpack Compose. The app will have the following core classes:
+
+1. `MainActivity`: This is the entry point of the app. It will host the main screen of the app and manage the navigation between different screens.
+
+2. `StockListScreen`: This screen will display a list of stocks fetched from the TwelveData API.
+
+3. `CryptoListScreen`: This screen will display a list of cryptocurrencies fetched from the TwelveData API.
+
+4. `StockDetailScreen`: This screen will display detailed information about a selected stock.
+
+5. `CryptoDetailScreen`: This screen will display detailed information about a selected cryptocurrency.
+
+6. `StockViewModel`: This ViewModel will handle fetching and storing the stock data from the TwelveData API.
+
+7. `CryptoViewModel`: This ViewModel will handle fetching and storing the cryptocurrency data from the TwelveData API.
+
+8. `TwelveDataApiService`: This is the service class that will handle the actual API calls to the TwelveData API.
+
+9. `Stock`: This data class will represent a stock.
+
+10. `Crypto`: This data class will represent a cryptocurrency.
+
+Now, let's start with the entry point of the app, `MainActivity.kt`.
+
+MainActivity.kt
+```kotlin
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.navigation.compose.rememberNavController
+import com.example.stockapp.ui.theme.StockAppTheme
+import com.example.stockapp.ui.navigation.Navigation
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            StockAppTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(color = MaterialTheme.colors.background) {
+                    val navController = rememberNavController()
+                    Navigation(navController)
+                }
+            }
+        }
+    }
+}
+```
+
+Next, let's create the `Navigation.kt` file which will handle the navigation between different screens.
+
+Navigation.kt
+```kotlin
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.example.stockapp.ui.screens.CryptoListScreen
+import com.example.stockapp.ui.screens.StockListScreen
+
+@Composable
+fun Navigation(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = "stock_list") {
+        composable("stock_list") { StockListScreen(navController) }
+        composable("crypto_list") { CryptoListScreen(navController) }
+    }
+}
+```
+
+Next, let's create the `StockListScreen.kt` and `CryptoListScreen.kt` files which will display the list of stocks and cryptocurrencies respectively.
+
+StockListScreen.kt
+```kotlin
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import com.example.stockapp.ui.components.StockList
+import com.example.stockapp.ui.viewmodel.StockViewModel
+
+@Composable
+fun StockListScreen(navController: NavHostController) {
+    val viewModel: StockViewModel = hiltViewModel()
+    StockList(viewModel = viewModel, navController = navController)
+}
+```
+
+CryptoListScreen.kt
+```kotlin
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import com.example.stockapp.ui.components.CryptoList
+import com.example.stockapp.ui.viewmodel.CryptoViewModel
+
+@Composable
+fun CryptoListScreen(navController: NavHostController) {
+    val viewModel: CryptoViewModel = hiltViewModel()
+    CryptoList(viewModel = viewModel, navController = navController)
+}
+```
+
+Next, let's create the `StockViewModel.kt` and `CryptoViewModel.kt` files which will handle fetching and storing the stock and cryptocurrency data respectively.
+
+StockViewModel.kt
+```kotlin
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.stockapp.data.model.Stock
+import com.example.stockapp.data.repository.StockRepository
+import kotlinx.coroutines.launch
+
+class StockViewModel(private val repository: StockRepository) : ViewModel() {
+    val stocks: LiveData<List<Stock>> = repository.stocks
+
+    init {
+        fetchStocks()
+    }
+
+    private fun fetchStocks() {
+        viewModelScope.launch {
+            repository.fetchStocks()
+        }
+    }
+}
+```
+
+CryptoViewModel.kt
+```kotlin
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.stockapp.data.model.Crypto
+import com.example.stockapp.data.repository.CryptoRepository
+import kotlinx.coroutines.launch
+
+class CryptoViewModel(private val repository: CryptoRepository) : ViewModel() {
+    val cryptos: LiveData<List<Crypto>> = repository.cryptos
+
+    init {
+        fetchCryptos()
+    }
+
+    private fun fetchCryptos() {
+        viewModelScope.launch {
+            repository.fetchCryptos()
+        }
+    }
+}
+```
+
+Next, let's create the `TwelveDataApiService.kt` file which will handle the actual API calls to the TwelveData API.
+
+TwelveDataApiService.kt
+```kotlin
+import com.example.stockapp.data.model.Crypto
+import com.example.stockapp.data.model.Stock
+import retrofit2.http.GET
+
+interface TwelveDataApiService {
+    @GET("stocks")
+    suspend fun getStocks(): List<Stock>
+
+    @GET("cryptos")
+    suspend fun getCryptos(): List<Crypto>
+}
+```
+
+Finally, let's create the `Stock.kt` and `Crypto.kt` files which will represent a stock and a cryptocurrency respectively.
+
+Stock.kt
+```kotlin
+data class Stock(
+    val symbol: String,
+    val name: String,
+    val price: Double,
+    val change: Double,
+    val changePercent: Double
+)
+```
+
+Crypto.kt
+```kotlin
+data class Crypto(
+    val symbol: String,
+    val name: String,
+    val price: Double,
+    val change: Double,
+    val changePercent: Double
+)
+```
+
+Please note that this is a simplified version of the app and there are many other details that need to be handled such as error handling, loading states, UI design, etc. Also, the actual API endpoints and the data model might be different depending on the TwelveData API.
